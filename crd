@@ -1,9 +1,9 @@
 --shows RFID card data
-[[
+--[[
 local shell = require("shell")
 shell.setWorkingDirectory("/mnt/335/");
 shell.execute("crd")
-]]
+]]--
 
 local event = require("event")
 local term = require("term")
@@ -12,32 +12,46 @@ local rfidreader = require("component").os_rfidreader
 
 require("component").gpu.setResolution(48,12)
 
-function split(data, pat) 
-  local ret = {} 
-  for i in unicode.gmatch(data,pat) do 
-    table.insert(ret,i) 
-  end 
-  return ret 
+function splitBySymbol(nstr, nchar)
+  local res={}
+  local t="_"
+  local cnt=1
+  while (true) do
+    t=""
+    for i = 1, unicode.len(nstr) do 
+      if(unicode.sub(nstr, i,i)==nchar) then
+        t = unicode.sub(nstr, 1,i-1)
+        nstr = unicode.sub(nstr, i+1)
+        break
+      end
+    end
+    if(t=="")then
+      break
+    end
+    res[cnt]=t
+    cnt = cnt+1
+  end
+  res[cnt]=nstr
+  return res
 end 
 
 function pt(ndict) for k,v in pairs(ndict) do print(k) end end
 
 function scanRfid(ndist)
-  rfidreader.scan(ndist)
-  local _,_,nick,dist,data,id = event.pull(0.2, "rfidData")
   term.clear()
+  rfidreader.scan(ndist)
+  local _, _, nick0,dist,data,id = event.pull(0.2, "rfidData")
+  local nick
+  local other
   if(data ~= nil) then
-    -- ,"\n",
-    pt(split(data,"/+"))
-  -- type/nick/data
-    -- print(nick)
-    -- print(data)
+    print(data)
+    _, nick, other = table.unpack(splitBySymbol(data,'/'))
   end
-  return nick, data
+  return nick, other
 end
 
 term.clear()
 -- while true do
-  scanRfid(4)
+  print(scanRfid(4))
   -- require("os").sleep(0.5)
 -- end

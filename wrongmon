@@ -1,0 +1,15 @@
+local component = require("component")
+local term = require("term")
+
+for k,_ in pairs(component.list("screen")) do
+  if(k ~= component.screen.address) then
+    term.clear()
+    component.gpu.bind(k)
+    component.setPrimary("screen", k)
+    term.clear()
+    file = io.open("default_monitor", "w")
+    file:write(k)
+    file:close()
+    exit()
+  end
+end
